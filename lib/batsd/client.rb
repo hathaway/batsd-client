@@ -56,6 +56,7 @@ module Batsd
 	        results = values[metric_name].collect{|v| { timestamp: Time.at(v["timestamp"].to_i), value: v["value"].to_f }  }
 	        results
 	    end
+	    
 
 	    # Clear and reconnect to the remote socket
 	    def reconnect!
@@ -68,10 +69,12 @@ module Batsd
 	     # Connect to the remote batsd server over TCP
 	        def connect!
 	            Timeout::timeout(5) do
-	                self.remote = TCPSocket.new(self.host, self.port) rescue nil
+	                self.remote = TCPSocket.new(self.host, self.port)
 	            end
 	        rescue Timeout::Error => e
-	            puts "Batsd: Couldn't connect to the remote statsd server in the time alloted"
+	            puts "Batsd: Couldn't connect to the remote batsd server in the time alloted"
+	        rescue
+	        	puts "Batsd: Unable to connect to batsd server"
 	        end
 
 	        # Send a command to the remote and attempt to parse the response as JSON
