@@ -1,3 +1,7 @@
+require 'timeout'
+require 'json'
+require 'socket'
+
 class Batsd
 
 	DEFAULTS = {
@@ -50,9 +54,9 @@ class Batsd
     # Get the values for a given <code>metric_name</code> that's contained in the available
     # set of datapoints within the range of <code>start_timestamp</code> to
     # <code>end_timestamp</code>
-    def values(metric_name, start_timestamp, end_timestamp=Time.now, attempt=0)
+    def stats(metric_name, start_timestamp, end_timestamp=Time.now, attempt=0)
         results = []
-        values = query_remote("values #{metric_name} #{start_timestamp.to_i} #{end_timestamp.to_i}")
+        values = send_command("values #{metric_name} #{start_timestamp.to_i} #{end_timestamp.to_i}")
         if values[metric_name].nil?
             if attempt < MAX_ATTEMPTS
                 return values(metric_name, start_timestamp, end_timestamp, attempt+1)
@@ -100,7 +104,7 @@ class Batsd
                 unless command == "ping"
                     results = JSON.parse(@response)
                 else
-                    results = @response
+                    results = @response.delete("\n")
                 end
                 results
             end
@@ -121,4 +125,3 @@ class Batsd
 end
 
 require 'batsd/version'
-require 'batsd/helper'
