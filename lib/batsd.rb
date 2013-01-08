@@ -58,7 +58,7 @@ class Batsd
         results = []
         values = send_command("values #{metric_name} #{start_timestamp.to_i} #{end_timestamp.to_i}")
         if values[metric_name].nil?
-            if attempt < MAX_ATTEMPTS
+            if attempt < max_attempts
                 return values(metric_name, start_timestamp, end_timestamp, attempt+1)
             else
                 raise InvalidValuesError
@@ -66,6 +66,14 @@ class Batsd
         end
         results = values[metric_name].collect{|v| { timestamp: Time.at(v["timestamp"].to_i), value: v["value"].to_f }  }
         results
+    end
+
+    def values(metric_name, start_timestamp, end_timestamp=Time.now)
+    	stats(metric_name, start_timestamp, end_timestamp).map{|s| s[:value]}
+    end
+
+    def timestamps(metric_name, start_timestamp, end_timestamp=Time.now)
+    	stats(metric_name, start_timestamp, end_timestamp).map{|s| s[:timestamp]}
     end
    
 
@@ -95,6 +103,15 @@ class Batsd
 				raise CannotConnectError
 		end
 
+		def disconnect
+			self.remote.close
+		end
+
+		def reconnect!
+			disconnect
+			connect!
+		end
+
 		# Send a command to the remote and attempt to parse the response as JSON
         def send_command(command, attempt=0)
             Timeout::timeout(timeout.to_f / 1000.0) do
@@ -110,13 +127,13 @@ class Batsd
             end
             rescue TimeoutError => e
                 if attempt < max_attempts 
-                    query_remote(command, attempt+1)
+                    send_command(command, attempt+1)
                 else
                     raise CommandTimeoutError
                 end
             rescue Exception => e
-                if attempt < MAX_ATTEMPTS 
-                    query_remote(command, attempt+1)
+                if attempt < max_attempts 
+                    send_command(command, attempt+1)
                 else
                     self.remote = nil
                     raise CommandError
@@ -125,3 +142,4 @@ class Batsd
 end
 
 require 'batsd/version'
+require 'batsd/errors'
