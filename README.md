@@ -46,3 +46,7 @@ Each stat is returned as a hash with a `:timestamp` and `:value`. To pull only t
 	end_timestamp = Time.now
 	values = client.values("metric_name", start_timestamp, end_timestamp)
 	timestamps = client.timestamps("metric_name", start_timestamp, end_timestamp)
+
+# Contributing
+
+[Fork the project](https://github.com/hathaway/batsd-client) and send pull requests.
