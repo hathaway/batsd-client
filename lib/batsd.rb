@@ -98,7 +98,7 @@ class Batsd
                 raise InvalidValuesError
             end
         end
-        results = values[metric_name].collect{|v| { timestamp: Time.at(v["timestamp"].to_i), value: v["value"].to_f }  }
+        results = values[metric_name].collect{|v| { :timestamp => Time.at(v["timestamp"].to_i), :value => v["value"].to_f }  }
         results
     end
 
